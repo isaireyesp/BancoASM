@@ -203,3 +203,40 @@ FinMenu:
     ret
 
 MenuProc ENDP
+
+
+;=============================================================
+; Parte 3 - Inicialización de datos en el menú
+; Mostrar saldo al abrir la ventana
+;=============================================================
+
+WM_INITDIALOG_CONTINUE:
+
+    ;---------------------------------------------------------
+    ; Obtener saldo de la cuenta actual
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo, CuentaActual
+
+    mov SaldoActual, eax
+
+    ;---------------------------------------------------------
+    ; Convertir saldo a texto
+    ;---------------------------------------------------------
+
+    invoke wsprintf, ADDR BufferSaldo, ADDR FormatoSaldo, SaldoActual
+
+    ;---------------------------------------------------------
+    ; Construir texto completo "Saldo Actual: $XXXX"
+    ;---------------------------------------------------------
+
+    invoke lstrcpy, ADDR BufferSaldo, ADDR TextoSaldo
+    invoke lstrcat, ADDR BufferSaldo, ADDR BufferSaldo+32
+
+    ;---------------------------------------------------------
+    ; Mostrar en la interfaz (Label o Static control)
+    ;---------------------------------------------------------
+
+    invoke SetDlgItemText, hMenu, IDC_SALDOACTUAL, ADDR BufferSaldo
+
+    ret
