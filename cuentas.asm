@@ -258,3 +258,168 @@ ObtenerTamArchivo PROC
     ret
 
 ObtenerTamArchivo ENDP
+
+;=============================================================
+; PARTE 3/14
+; Lectura del archivo banco.dat
+;=============================================================
+
+;-------------------------------------------------------------
+; LeerArchivo
+;
+; Lee completamente banco.dat dentro de BufferArchivo.
+;
+; Retorna:
+;   TRUE  -> Lectura correcta
+;   FALSE -> Error
+;-------------------------------------------------------------
+
+LeerArchivo PROC
+
+    invoke ReiniciarBuffers
+
+    invoke SetFilePointer,\
+            hArchivo,\
+            0,\
+            NULL,\
+            FILE_BEGIN
+
+    invoke ReadFile,\
+            hArchivo,\
+            ADDR BufferArchivo,\
+            SIZEOF BufferArchivo-1,\
+            ADDR BytesLeidos,\
+            NULL
+
+    cmp eax,FALSE
+    je ErrorLectura
+
+    mov esi,OFFSET BufferArchivo
+    add esi,BytesLeidos
+
+    mov BYTE PTR [esi],0
+
+    mov eax,TRUE
+    ret
+
+ErrorLectura:
+
+    mov eax,FALSE
+    ret
+
+LeerArchivo ENDP
+
+
+;-------------------------------------------------------------
+; MoverInicioArchivo
+;
+; Coloca el puntero al inicio del archivo.
+;-------------------------------------------------------------
+
+MoverInicioArchivo PROC
+
+    invoke SetFilePointer,\
+            hArchivo,\
+            0,\
+            NULL,\
+            FILE_BEGIN
+
+    mov eax,TRUE
+    ret
+
+MoverInicioArchivo ENDP
+
+
+;-------------------------------------------------------------
+; FinDeArchivo
+;
+; Devuelve TRUE cuando ya no quedan datos.
+;-------------------------------------------------------------
+
+FinDeArchivo PROC
+
+    mov eax,PosicionActual
+
+    cmp eax,BytesLeidos
+    jb HayDatos
+
+    mov eax,TRUE
+    ret
+
+HayDatos:
+
+    mov eax,FALSE
+    ret
+
+FinDeArchivo ENDP
+
+
+;-------------------------------------------------------------
+; LeerLinea
+;
+; Lee una línea desde BufferArchivo hacia BufferLinea.
+;
+; Formato esperado:
+;
+; usuario|pin|saldo
+;
+;-------------------------------------------------------------
+
+LeerLinea PROC
+
+    LOCAL indice:DWORD
+
+    invoke RtlZeroMemory,\
+            ADDR BufferLinea,\
+            SIZEOF BufferLinea
+
+    mov indice,0
+
+SiguienteCaracter:
+
+    mov eax,PosicionActual
+
+    cmp eax,BytesLeidos
+    jae FinLinea
+
+    mov esi,OFFSET BufferArchivo
+    add esi,eax
+
+    mov bl,[esi]
+
+    inc PosicionActual
+
+    cmp bl,13
+    je SaltarCR
+
+    cmp bl,10
+    je FinLinea
+
+    mov ecx,indice
+
+    mov edi,OFFSET BufferLinea
+    add edi,ecx
+
+    mov [edi],bl
+
+    inc indice
+
+    jmp SiguienteCaracter
+
+SaltarCR:
+
+    jmp SiguienteCaracter
+
+FinLinea:
+
+    mov ecx,indice
+
+    mov edi,OFFSET BufferLinea
+    add edi,ecx
+
+    mov BYTE PTR [edi],0
+
+    mov eax,TRUE
+    ret
+
+LeerLinea ENDP
