@@ -156,6 +156,11 @@ CuentaOrigen CUENTA ?
 
 .code
 
+
+
+
+
+
 ;=============================================================
 ; PARTE 2/14
 ; Apertura y cierre de banco.dat
